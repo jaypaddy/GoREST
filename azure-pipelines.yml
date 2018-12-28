@@ -8,29 +8,52 @@ variables:
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
   modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
 
+  projectName: 'goREST'
+  registryLogin: 'paddycontainers'
+  registryName: 'paddycontainers'
+  registryPassword: 'Rfb1vT9QuW=x2v3Z37jKFYNCg11uoT9Y'
+  registryServerName: '$(registryName).azurecr.io'
+  imageName: '$(projectName):$(build.buildId)'  
+
+
+
 steps:
-- script: |
-    mkdir -p '$(GOBIN)'
-    mkdir -p '$(GOPATH)/pkg'
-    mkdir -p '$(modulePath)'
-    shopt -s extglob
-    mv !(gopath) '$(modulePath)'
-    echo '##vso[task.prependpath]$(GOBIN)'
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-  displayName: 'Set up the Go workspace'
+#- script: |
+#    mkdir -p '$(GOBIN)'
+#    mkdir -p '$(GOPATH)/pkg'
+#    mkdir -p '$(modulePath)'
+#    shopt -s extglob
+#    mv !(gopath) '$(modulePath)'
+#    echo '##vso[task.prependpath]$(GOBIN)'
+#    echo '##vso[task.prependpath]$(GOROOT)/bin'
+#  displayName: 'Set up the Go workspace'
 
-- script: go get -v -t -d ./...
-  workingDirectory: '$(modulePath)'
-  displayName: 'go get dependencies'  
+#- script: go get -v -t -d ./...
+#  workingDirectory: '$(modulePath)'
+#  displayName: 'go get dependencies'  
 
-- script: |
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-  workingDirectory: '$(modulePath)'
-  displayName: 'Download dep and run `dep ensure`'
+#- script: |
+#    if [ -f Gopkg.toml ]; then
+#        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+#        dep ensure
+#    fi
+#  workingDirectory: '$(modulePath)'
+#  displayName: 'Download dep and run `dep ensure`'
 
-- script: go build -v .
-  workingDirectory: '$(modulePath)'
-  displayName: 'Build'
+#- script: go build -v .
+#  workingDirectory: '$(modulePath)'
+#  displayName: 'Build'
+
+
+- bash: docker build -f $(system.defaultWorkingDirectory)/$(projectName)/Dockerfile -t $(registryServerName)/$(imageName):$(build.buildId) -t $(registryServerName)/$(imageName):latest $(system.defaultWorkingDirectory)/$(projectName)
+  displayName: 'docker build'
+
+  
+- bash: docker login $(registryServerName) -u $(registryLogin) -p $(registryPassword)
+  displayName: 'docker login'
+
+  - bash: |
+    docker push $(registryServerName)/$(imageName):$(build.buildId)
+    docker push $(registryServerName)/$(imageName):latest
+  displayName: 'docker push'
+  condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
