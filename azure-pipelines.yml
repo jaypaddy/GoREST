@@ -52,7 +52,7 @@ steps:
 - bash: docker login $(registryServerName) -u $(registryLogin) -p $(registryPassword)
   displayName: 'docker login'
 
-  - bash: |
+- bash: |
     docker push $(registryServerName)/$(imageName):$(build.buildId)
     docker push $(registryServerName)/$(imageName):latest
   displayName: 'docker push'
