@@ -1,0 +1,46 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gorest
+spec:
+  template:
+    metadata:
+      labels:
+        app: gorest
+    spec:
+      containers:
+      - image: paddycontainers.azurecr.io/gorest
+        name: gorest
+        tty: true
+        command: ["/app/main"]
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gorest
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: gorest
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gorest
+  annotations:
+    kubernetes.io/ingress.class: addon-http-application-routing
+spec:
+  rules:
+  - host: gorest.5f6c014178f64e819c34.centralus.aksapp.io
+    http:
+      paths:
+      - backend:
+          serviceName: gorest
+          servicePort: 80
+        path: /
