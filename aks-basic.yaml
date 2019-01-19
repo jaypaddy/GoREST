@@ -37,7 +37,7 @@ metadata:
     kubernetes.io/ingress.class: addon-http-application-routing
 spec:
   rules:
-  - host: gorest.5f6c014178f64e819c34.centralus.aksapp.io
+  - host: gorest.0cd48594a1b04436987a.centralus.aksapp.io
     http:
       paths:
       - backend:
